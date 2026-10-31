@@ -9,12 +9,16 @@
  * 服务商里有两个是**自定义多页气泡**（`shape: 'custom'`）：一个把内置三种形态复刻成 4 页、
  * 一个自设计 3 页，用来验证"第三方自己决定气泡长什么样 + 点击循环切页"这条能力。
  *
+ * 另有两个开关（语音合成 / 语音识别）：默认关闭，打开后各注册一个 mock 实现，
+ * 用来验证 `petApi7340.voice.register` 与 `petApi7340.speech.register` 两条第三方入口。
+ *
  * @module dsh-cordis-probe
  */
 import { MOCK_BALANCE_PROVIDERS } from './mock-balance.js';
 import { createMockAdapter } from './mock-adapter.js';
+import { createMockSpeechProvider } from './mock-speech.js';
 import { createMockVoiceProvider } from './mock-voice.js';
-import { VOICE_ROUTE, handleVoiceRoute } from './voice-route.js';
+import { SPEECH_ROUTE, VOICE_ROUTE, createToggleHandler } from './toggle-route.js';
 
 /** Cordis 插件名（诊断与日志里显示）。 */
 export const name = 'cordis-probe';
@@ -79,40 +83,60 @@ export function apply(ctx) {
     }
   }
 
-  // 4) 语音：默认关闭，打开后 register 一个「固定提示音」的合成实现。
-  // 注册在宿主、按钮在页面，两半没有直接通道，所以额外开一个最小路由给页面点。
-  const voice = ctx.get('petApi7340', false)?.voice;
-  if (!voice) return;
-  /** 已打开的注销函数；null = 当前关闭。 */
-  let disposeVoice = null;
+  // 4) 语音与识别：各一个开关，默认关闭，打开后 register 一个 mock 实现。
+  // 注册在宿主、按钮在页面，两半没有直接通道，所以额外开两个最小路由给页面点。
+  const api = ctx.get('petApi7340', false);
+  /** 待挂载的开关路由：路径 → 读写控制。 */
+  const toggles = [];
 
-  /** 打开/关闭 mock 语音；幂等，重复调用不会叠加注册。 */
-  const setVoiceOn = (on) => {
-    if (on && !disposeVoice) disposeVoice = voice.register(createMockVoiceProvider());
-    if (!on && disposeVoice) {
-      disposeVoice();
-      disposeVoice = null;
-    }
-    return on;
-  };
+  const voice = api?.voice;
+  if (voice) {
+    /** 已打开的注销函数；null = 当前关闭。 */
+    let disposeVoice = null;
+    /** 打开/关闭 mock 语音；幂等，重复调用不会叠加注册。 */
+    const setVoiceOn = (on) => {
+      if (on && !disposeVoice) disposeVoice = voice.register(createMockVoiceProvider());
+      if (!on && disposeVoice) {
+        disposeVoice();
+        disposeVoice = null;
+      }
+      return on;
+    };
+    // 插件卸载时确保注销：否则 mock 语音会赖在宿主里，之后的 /voice/speak 一直走提示音
+    ctx.effect(() => () => {
+      setVoiceOn(false);
+    });
+    toggles.push([VOICE_ROUTE, { isOn: () => disposeVoice !== null, setOn: setVoiceOn }]);
+  }
 
-  // 插件卸载时确保注销：否则 mock 语音会赖在宿主里，之后的 /voice/speak 一直走提示音
-  ctx.effect(() => () => {
-    setVoiceOn(false);
-  });
+  const speech = api?.speech;
+  if (speech) {
+    /** 已打开的注销函数；null = 当前关闭。 */
+    let disposeSpeech = null;
+    /** 打开/关闭 mock 识别；幂等，重复调用不会叠加注册。 */
+    const setSpeechOn = (on) => {
+      if (on && !disposeSpeech) disposeSpeech = speech.register(createMockSpeechProvider());
+      if (!on && disposeSpeech) {
+        disposeSpeech();
+        disposeSpeech = null;
+      }
+      return on;
+    };
+    // 同上：卸载时必须注销，否则 /voice/hear 会一直回 mock 文字
+    ctx.effect(() => () => {
+      setSpeechOn(false);
+    });
+    toggles.push([SPEECH_ROUTE, { isOn: () => disposeSpeech !== null, setOn: setSpeechOn }]);
+  }
 
   const webServer = ctx.get('webServer', false);
   if (!webServer) return;
-  try {
-    ctx.effect(() =>
-      webServer.register({
-        kind: 'prefix',
-        path: VOICE_ROUTE,
-        handler: (req, res) => handleVoiceRoute(req, res, { isOn: () => disposeVoice !== null, setOn: setVoiceOn }),
-      }),
-    );
-  } catch (e) {
-    warn('语音开关路由', e);
+  for (const [path, control] of toggles) {
+    try {
+      ctx.effect(() => webServer.register({ kind: 'prefix', path, handler: createToggleHandler(control) }));
+    } catch (e) {
+      warn('开关路由 ' + path, e);
+    }
   }
 }
 

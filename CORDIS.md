@@ -304,3 +304,70 @@ export function apply(ctx) {
 ctx.get('petApi7340').voice.list();
 // { builtin: ['edge'], external: ['my-tts'] }
 ```
+
+### speech.register
+
+第三方插件注册自己的语音识别实现。注册后 `POST /voice/hear` 改走它；没注册时走 DSH 宿主自带的识别能力。
+
+**参数**
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | string | 唯一标识；不能与内置来源同名（`dsh`） |
+| `name` | string | 展示名，只用于排障 |
+| `transcribe` | function | 入参 `{ audio, language }` 与可选中止信号，返回识别出的文字 |
+
+**返回**：`() => void`，注销函数。配合 `ctx.effect` 使用，插件卸载时自动注销。
+
+**抛错**：定义不是对象、`id` 为空、`id` 与内置来源同名、`transcribe` 不是函数。
+
+**行为**
+
+- 同一时刻只有一个实现生效，**后注册的覆盖先注册的**；注销只清「仍是自己那份」，迟到的注销不会顶掉后来者。
+- **不回落**：注册了就不会退到 DSH 自带识别——第三方坏了就是识别失败，不会静默改用别人。
+- `audio` 是**原始 WAV 字节**（16kHz / 单声道 / PCM16）；宿主不做格式校验，格式不合规由实现自己抛错。
+- 返回**空串表示这段没人说话**，属于成功，不是失败——与合成的「空字节即失败」相反。
+- 失败必须 `throw`：宿主归一成 `generate-error`，原始 message 回给调用方。
+- 返回非字符串按失败处理，不会把对象塞进 `text` 字段。
+- 单次识别上限 30 秒；调用方断开时信号会被 abort，实现可以选择不理，但宿主会立即停止等待。
+- **宿主不排队**：并发由实现自己决定；DSH 自带识别有自己的队列（约 4 个），第三方没有。
+- 识别**不缓存**：同一段音频每次都会重新走实现。
+
+```js
+export const inject = ['petApi7340'];
+
+export function apply(ctx) {
+  ctx.effect(() =>
+    ctx.get('petApi7340').speech.register({
+      id: 'my-asr',
+      name: '我的识别',
+      async transcribe({ audio, language }, signal) {
+        const res = await fetch('http://127.0.0.1:9001/asr', {
+          method: 'POST',
+          headers: { 'content-type': 'application/octet-stream' },
+          body: audio,
+          signal,
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return (await res.json()).text;
+      },
+    }),
+  );
+}
+```
+
+### speech.list
+
+**参数**：无。
+
+**返回**：`{ builtin, external }`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `builtin` | string[] | 内置来源 id（目前只有 `dsh`） |
+| `external` | string[] | 当前生效的第三方 id；没注册则为空数组 |
+
+```js
+ctx.get('petApi7340').speech.list();
+// { builtin: ['dsh'], external: ['my-asr'] }
+```

@@ -19,6 +19,7 @@ import type { SleepStore } from '../sleep.ts';
 import type { PollStateStore } from '../state.ts';
 import type { VoiceTarget } from '../surface.ts';
 import type { TodoStore } from '../todo/store.ts';
+import type { HearService } from '../voice/hear.ts';
 import type { VoiceService } from '../voice/speak.ts';
 import type { WorkStatusStore } from '../work-status.ts';
 
@@ -159,4 +160,6 @@ export interface PetRouteDeps {
   readonly assetRootFor: (ext: string) => string;
   /** 语音合成服务（校验、排队、缓存与上游调用都在里面）。 */
   readonly voice: VoiceService;
+  /** 语音识别服务（音频转文字；宿主没启用语音输入时由它自己回 unsupported）。 */
+  readonly speech: HearService;
 }

@@ -2309,6 +2309,67 @@ paths:
               schema:
                 type: string
 
+  /dsh-pet-7340/voice/hear:
+    post:
+      tags: [Voice]
+      operationId: transcribeVoice
+      summary: 把一段录音识别成文字
+      description: |
+        与 `/voice/speak` 反向：音频进、文字出。
+
+        - 能力来自宿主的语音识别服务；宿主没启用语音输入插件时返回 `unsupported`，
+          不把它当成识别失败。
+        - 音频必须是 **16kHz / 单声道 / PCM16 的 WAV**，base64 后放在 `audio` 字段。
+          其它容器（mp3/webm/ogg）或其它采样率一律拒绝。格式由宿主识别器校验，
+          不合规时返回 `generate-error` 并附原始说明。
+        - 解码后不得超过 768 KiB（约 24 秒）：请求体上限是 1 MiB，base64 会再放大三分之一。
+        - 整段一次性识别，不做流式。
+        - 参数问题返回 `bad-request`，能力缺失返回 `unsupported`，识别器报错返回
+          `generate-error`；三者都是 HTTP 200 + `{ ok: false, reason, message }`。
+          只有请求体不是合法 JSON 才是 400，方法不对是 405。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [audio]
+              properties:
+                audio:
+                  type: string
+                  description: 16kHz/单声道/PCM16 WAV 的 base64；解码后上限 768 KiB。
+                language:
+                  type: string
+                  description: 语言提示，如 `zh` / `en`；缺省由宿主识别器决定。
+      responses:
+        "200":
+          description: |
+            成功时是 `{ ok: true, text }`；失败时是 `{ ok: false, reason, message }`，
+            reason 取值 `bad-request`（参数非法）/ `unsupported`（宿主没有可用识别器）/
+            `generate-error`（识别器失败或超时）。
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                  text:
+                    type: string
+                    description: 只有成功时出现。
+                  reason:
+                    type: string
+                    description: 只有失败时出现。
+                  message:
+                    type: string
+                    description: 只有失败时出现。
+        "400":
+          description: 请求体不是合法 JSON。
+        "405":
+          description: 方法不是 POST。
+
   /dsh-pet-7340/voice/speak:
     post:
       tags: [Voice]
