@@ -20,6 +20,7 @@ import { makeFontCard } from './settings/font-card.ts';
 import { makeGlobalCard, type GlobalFlagKey, type GlobalFlags } from './settings/global-card.ts';
 import { makeLoadStatus } from './settings/load-status.ts';
 import { makeModelCard, type ModelFieldKey } from './settings/model-card.ts';
+import { makeMobileCard } from './settings/mobile-card.ts';
 import { makeModelPicker } from './settings/picker/index.ts';
 import { makeVoicePicker } from './settings/picker/voice-picker.ts';
 import { runNotificationTest } from './settings/notify-test.ts';
@@ -69,6 +70,7 @@ export function makePetConfigSection(rt: SettingsRuntime): FunctionComponent<{ c
   const FontCard = makeFontCard(rt);
   const ModelCard = makeModelCard(rt, ModelPicker);
   const PhysicsCard = makePhysicsCard(rt);
+  const MobileCard = makeMobileCard(rt);
   const Actions = makeActions(rt);
   const { ConfigMetaCard, StorageCard } = makePathsCards(rt);
   const SettingsDialog = makeDialog(rt);
@@ -125,8 +127,8 @@ export function makePetConfigSection(rt: SettingsRuntime): FunctionComponent<{ c
     // 不做即时写入：PUT /config 会重启桌面 Helper，全部桌面宠物窗口重建（拖拽落点清空、宠物跳回角落）。
     // 引擎重读放在保存成功后（persist 里调 reloadNotifications），保存后即时生效、无需刷新。
     const [notifyEnabled, setNotifyEnabled] = useState(true);
-    // 点击音效开关：同通知开关，随「保存」整包写入；初值 false 是内置默认，加载效应会用成品值覆盖。
-    const [clickSound, setClickSound] = useState(false);
+    // 点击音效开关：同通知开关，随「保存」整包写入；初值 true 是内置默认，加载效应会用成品值覆盖。
+    const [clickSound, setClickSound] = useState(true);
     // 表情包配图开关（全局）：切换只改本地状态，随「保存」一起提交。
     const [whisperImage, setWhisperImage] = useState(false);
     const [chatImage, setChatImage] = useState(false);
@@ -350,6 +352,7 @@ export function makePetConfigSection(rt: SettingsRuntime): FunctionComponent<{ c
           onChatImageLimitChange: setChatImageLimit,
         }),
         h(PhysicsCard, { busy, physics, onChange: patchPhysics }),
+        h(MobileCard, { busy, physics, onChange: patchPhysics }),
         h(Actions, {
           busy,
           msg,

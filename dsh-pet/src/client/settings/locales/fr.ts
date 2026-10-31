@@ -144,28 +144,34 @@ export const fr: Record<Key, string> = {
   physicsTitle: 'Physique (ressenti du glisser-lancer)',
   physicsHint:
     "Valeurs par défaut globales, partagées par tous les compagnons (un pet pack peut les remplacer dans son propre fichier de type) ; écrites dans la configuration utilisateur lors de l'enregistrement (jamais immédiatement). Appliquées immédiatement dans le navigateur ; sur le bureau, après que l'enregistrement a rechargé les fenêtres des compagnons.",
-  'physics.gravity': 'Gravité (gravity)',
+  mobileTitle: 'Effets mobiles',
+  mobileHint:
+    "Ces réglages n'ont de sens que dans un navigateur mobile : la vibration exige un moteur, les deux interrupteurs de mouvement exigent des capteurs d'inclinaison / d'accélération, et ces capteurs ne fonctionnent qu'en HTTPS ou sur localhost.",
+  'physics.gravity': 'Gravité',
   'physics.gravityHint':
     'px/s², plus la valeur est élevée, plus la chute est rapide ; 0 = apesanteur (trajectoire rectiligne uniforme)',
-  'physics.restitution': 'Rebond (restitution)',
+  'physics.restitution': 'Rebond',
   'physics.restitutionHint':
     '0 à 1, proportion de vitesse conservée lors du rebond contre un mur ou le sol (1 = parfaitement élastique, 0 = arrêt net)',
-  'physics.groundFriction': 'Frottement au sol (groundFriction)',
+  'physics.groundFriction': 'Frottement au sol',
   'physics.groundFrictionHint': 'par seconde, atténuation de la vitesse horizontale au sol ; 0 = sol verglacé',
-  'physics.throwPower': 'Force de lancer (throwPower)',
+  'physics.throwPower': 'Force de lancer',
   'physics.throwPowerHint':
     '> 0, multiplicateur global du suivi ressort et de la vitesse de lancer (1 = valeur par défaut ; plus haut = suivi plus ferme et lancers plus violents)',
-  physicsCeilingBounce: 'Rebond au plafond (ceilingBounce)',
+  physicsCeilingBounce: 'Rebond au plafond',
   physicsCeilingBounceHint: "Désactivé, un lancer peut sortir par le haut de l'écran (la gravité le ramène)",
-  physicsPetCollision: 'Collisions entre compagnons (petCollision)',
+  physicsPetCollision: 'Collisions entre compagnons',
   physicsPetCollisionHint:
     'Un compagnon en vol rebondit sur les autres en conservant la quantité de mouvement (masse ∝ taille²)',
   physicsHaptic: 'Vibration aux collisions',
   physicsHapticHint:
     'Une vibration par impact (murs, sol, plafond, autres compagnons). Fonctionne dans Chrome/Edge ; pas sur iOS ni dans les coques WebView comme Via. Le mode Ne pas déranger la bloque.',
-  physicsDeviceMotion: 'Contrôle par inclinaison (deviceMotion)',
-  physicsDeviceMotionHint:
-    'Inclinez le téléphone : la gravité suit (valeur = celle ci-dessus) ; secouez pour lancer le compagnon dans le sens du geste. Nécessite HTTPS/localhost ; sans capteurs, aucun effet.',
+  physicsTilt: 'Gravité par inclinaison',
+  physicsTiltHint:
+    'Inclinez le téléphone : la gravité suit (valeur = celle ci-dessus) ; avec une gravité à 0, l’inclinaison n’a aucun effet. Nécessite HTTPS/localhost.',
+  physicsShake: 'Secouer pour lancer',
+  physicsShakeHint:
+    'Secouez pour lancer le compagnon dans le sens du geste ; la force suit throwPower. Indépendant de la gravité, donc utilisable à gravité 0. Nécessite HTTPS/localhost.',
   invalidPhysics:
     'Vérifiez les paramètres physiques : gravité / frottement au sol ≥ 0, rebond entre 0 et 1, force de lancer > 0.',
   fontTitle: 'Apparence et police',

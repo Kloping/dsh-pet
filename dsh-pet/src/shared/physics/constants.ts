@@ -60,9 +60,10 @@ export const DEFAULT_PHYSICS: PhysicsParams = {
   groundFriction: GROUND_FRICTION,
   ceilingBounce: true,
   throwPower: 1,
-  petCollision: false,
+  petCollision: true,
   hapticEnabled: true,
-  deviceMotion: false,
+  tiltGravity: false,
+  shakeThrow: false,
 };
 
 /** 总力度默认量（throwPower=1 即现状）。 */

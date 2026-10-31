@@ -143,14 +143,17 @@ export const pt: Record<Key, string> = {
   physicsTitle: 'Física (sensação de arrastar e arremessar)',
   physicsHint:
     'Padrão global, compartilhado por todos os pets (um pet pack pode sobrescrever no arquivo do próprio tipo); gravado na configuração do usuário ao "Salvar" (nunca na hora). No navegador vale na hora; no desktop vale quando o "Salvar" recarrega as janelas do pet.',
-  'physics.gravity': 'Gravidade (gravity)',
+  mobileTitle: 'Efeitos no celular',
+  mobileHint:
+    'Só fazem sentido no navegador do celular: a vibração precisa de motor, os dois interruptores de movimento precisam de sensores de inclinação/aceleração, e os sensores exigem HTTPS ou localhost.',
+  'physics.gravity': 'Gravidade',
   'physics.gravityHint': 'px/s² — quanto maior, mais rápido cai; 0 = sem gravidade (voa em linha reta para sempre)',
-  'physics.restitution': 'Restituição (restitution)',
+  'physics.restitution': 'Restituição',
   'physics.restitutionHint':
     '0–1, velocidade mantida ao quicar na parede ou no chão (1 = totalmente elástico, 0 = para na hora)',
-  'physics.groundFriction': 'Atrito com o chão (groundFriction)',
+  'physics.groundFriction': 'Atrito com o chão',
   'physics.groundFrictionHint': 'por segundo, perda de velocidade horizontal após encostar no chão; 0 = piso de gelo',
-  'physics.throwPower': 'Força de arremesso (throwPower)',
+  'physics.throwPower': 'Força de arremesso',
   'physics.throwPowerHint':
     '> 0, multiplicador geral da mola que segue o cursor e da velocidade de saída (1 = padrão; maior = mais colado ao cursor e arremessos mais fortes)',
   physicsCeilingBounce: 'Quicar no teto',
@@ -161,9 +164,12 @@ export const pt: Record<Key, string> = {
   physicsHaptic: 'Vibração ao colidir',
   physicsHapticHint:
     'Uma vibração por impacto (paredes, chão, teto, outros pets). Funciona no Chrome/Edge; não no iOS nem em navegadores WebView como o Via. O modo Não perturbe bloqueia o vibrador.',
-  physicsDeviceMotion: 'Controle por inclinação (deviceMotion)',
-  physicsDeviceMotionHint:
-    'Incline o celular e a gravidade acompanha (magnitude = o valor acima); agite para arremessar o pet na direção do gesto. Requer HTTPS/localhost; sem sensores não funciona.',
+  physicsTilt: 'Gravidade por inclinação',
+  physicsTiltHint:
+    'Incline o celular e a gravidade acompanha (magnitude = o valor acima); com gravidade em 0 a inclinação não faz nada. Requer HTTPS/localhost.',
+  physicsShake: 'Sacudir para arremessar',
+  physicsShakeHint:
+    'Sacuda para arremessar o pet na direção do gesto; a força acompanha o throwPower. Independe da gravidade, então funciona com gravidade 0. Requer HTTPS/localhost.',
   invalidPhysics:
     'Revise os valores de física: gravidade / atrito com o chão ≥ 0, restituição 0–1, força de arremesso > 0.',
   fontTitle: 'Aparência e fonte',

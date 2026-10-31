@@ -142,6 +142,9 @@ export const en: Record<Key, string> = {
   physicsTitle: 'Physics (drag & throw feel)',
   physicsHint:
     'Global default, shared by every pet (a pet pack may override it in its own kind file); written to the user config on "Save" (never written immediately). Applies instantly in the browser; on the desktop it applies once Save reloads the pet windows.',
+  mobileTitle: 'Mobile effects',
+  mobileHint:
+    'Only meaningful in a phone browser: haptics needs a vibration motor, the two motion switches need tilt / accelerometer sensors, and sensors require HTTPS or localhost.',
   'physics.gravity': 'Gravity',
   'physics.gravityHint': 'px/s² — the higher, the faster it falls; 0 = weightless (flies straight forever)',
   'physics.restitution': 'Bounciness',
@@ -160,9 +163,12 @@ export const en: Record<Key, string> = {
   physicsHaptic: 'Collision haptics',
   physicsHapticHint:
     'One buzz per hit (walls, floor, ceiling, other pets). Works in Chrome/Edge; not on iOS or WebView shells like Via. Do Not Disturb blocks it.',
-  physicsDeviceMotion: 'Tilt control (deviceMotion)',
-  physicsDeviceMotionHint:
-    'Tilt the phone and gravity follows it (magnitude = the gravity value above); shake to fling the pet along the shake. Requires HTTPS/localhost; no effect without sensors.',
+  physicsTilt: 'Tilt gravity',
+  physicsTiltHint:
+    'Tilt the phone and gravity follows it (magnitude = the gravity value above); with gravity at 0 tilt has no effect. Requires HTTPS/localhost.',
+  physicsShake: 'Shake to throw',
+  physicsShakeHint:
+    'Shake to fling the pet along the shake direction; strength scales with throwPower. Independent of gravity, so it still works at gravity 0. Requires HTTPS/localhost.',
   invalidPhysics: 'Check the physics values: gravity / ground friction ≥ 0, bounciness 0–1, throw power > 0.',
   fontTitle: 'Appearance & font',
   fontHint:

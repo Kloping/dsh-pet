@@ -176,26 +176,60 @@ export function createCardMotion(rt: CardMotionRuntime) {
       onImpact: (impact) => {
         haptics.hit(impact.kind, impact.speed);
       },
-      // 只在常驻（体感）模式被读：没有采样时退回竖直重力，行为与关掉体感一致。
+      // 只在常驻（倾斜）模式被读：倾斜没开或还没有采样时退回竖直重力，行为与关掉体感一致。
       gravity: () => {
+        const physics = cfgRef.current.physics;
+        const gravity = physics?.gravity ?? 0;
+        if (physics?.tiltGravity !== true) return { gx: 0, gy: gravity };
         const sample = tiltSampleRef.current;
         const baseline = tiltBaselineRef.current;
-        const gravity = cfgRef.current.physics?.gravity ?? 0;
         if (sample === null || baseline === null) return { gx: 0, gy: gravity };
         return tiltGravity(sample, baseline, gravity);
       },
     });
     const flight = flightRef.current;
 
-    /** 体感：采样与中性姿态；关闭开关时清空基线，下次再开重新标定。 */
+    /** 体感：采样与中性姿态；关掉倾斜时两个都清空，下次再开重新标定。 */
     const tiltSampleRef = useRef<{ beta: number; gamma: number } | null>(null);
     const tiltBaselineRef = useRef<{ beta: number; gamma: number } | null>(null);
 
-    // 传感器订阅只建一次：开关与物理参数每次回调现读，避免重订阅。
+    /** 从给定左上角与初速起飞；先停弹簧跟随与走位，免得两套运动同时改位置。 */
+    const startThrow = (px: number, py: number, vx: number, vy: number): void => {
+      live.current.drag.stopFollow();
+      stopMove();
+      flight.start(px, py, vx, vy);
+    };
+
+    /**
+     * 把速度落到这只宠物身上：在跑就按给定口径处理，没跑就从落点起飞。
+     *
+     * 没跑时一律起抛掷而不是起常驻——常驻只在倾斜开关开着时由姿态采样拉起，
+     * 否则重力非零时会留下一个永远停不下来的常驻循环。
+     *
+     * @param vx - 水平速度或冲量（px/s）。
+     * @param vy - 竖直速度或冲量（px/s）。
+     * @param mode - `set` = 结算后的绝对速度（碰撞）；`add` = 叠加冲量（摇一摇）。
+     */
+    const applyVelocity = (vx: number, vy: number, mode: 'set' | 'add'): void => {
+      if (flight.isFlying()) {
+        if (mode === 'set') flight.setVelocity(vx, vy);
+        else flight.impulse(vx, vy);
+        return;
+      }
+      const at = boxRef.current ?? root()?.getBoundingClientRect() ?? null;
+      if (at === null) return;
+      startThrow(at.x, at.y, vx, vy);
+    };
+    /** 最新的 applyVelocity 引用，供碰撞槽与传感器回调转发，避免陈旧闭包。 */
+    const applyVelocityRef = useRef<(vx: number, vy: number, mode: 'set' | 'add') => void>(() => {});
+    applyVelocityRef.current = applyVelocity;
+
+    // 传感器订阅只建一次：两个开关与物理参数每次回调现读，避免重订阅。
     useEffect(() => {
       if (!canReadMotionSensors()) return;
       const offTilt = subscribeTilt((sample) => {
-        if (cfgRef.current.physics?.deviceMotion !== true) {
+        if (cfgRef.current.physics?.tiltGravity !== true) {
+          tiltSampleRef.current = null;
           tiltBaselineRef.current = null;
           // 关掉开关时立刻收手：常驻模式若还在跑，会继续按朝下的重力往下掉。
           // 只停常驻——无条件 stop 会把正在飞的抛掷一起按掉，而传感器采样是持续不断的。
@@ -215,11 +249,10 @@ export function createCardMotion(rt: CardMotionRuntime) {
       });
       const offShake = subscribeShake((ax, ay, az) => {
         const physics = cfgRef.current.physics;
-        if (physics?.deviceMotion !== true) return;
+        if (physics?.shakeThrow !== true) return;
         if (live.current.drag.isActive()) return;
-        // 常驻模式也在 flight 里跑，所以不能按 isFlying 挡——直接加进当前速度即可。
         const impulse = shakeImpulse(ax, ay, az, physics.throwPower ?? 1);
-        if (impulse !== null) flight.impulse(impulse.vx, impulse.vy);
+        if (impulse !== null) applyVelocityRef.current(impulse.vx, impulse.vy, 'add');
       });
       return () => {
         offTilt();
@@ -228,26 +261,6 @@ export function createCardMotion(rt: CardMotionRuntime) {
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps -- 订阅只建一次；开关、物理参数与驱动实例都经 ref 现读
     }, []);
-
-    /** 从给定左上角与初速起飞；先停弹簧跟随与走位，免得两套运动同时改位置。 */
-    const startThrow = (px: number, py: number, vx: number, vy: number): void => {
-      live.current.drag.stopFollow();
-      stopMove();
-      flight.start(px, py, vx, vy);
-    };
-    /** 被撞结算：在跑就原地改写速度（碰撞给的是绝对速度），没跑就当作被撞飞、从落点起飞。 */
-    const applyHit = (vx: number, vy: number): void => {
-      if (flight.isFlying()) {
-        flight.setVelocity(vx, vy);
-        return;
-      }
-      const at = boxRef.current ?? root()?.getBoundingClientRect() ?? null;
-      if (at === null) return;
-      startThrow(at.x, at.y, vx, vy);
-    };
-    /** 最新的 applyHit 引用，供碰撞槽转发，避免陈旧闭包。 */
-    const applyHitRef = useRef<(vx: number, vy: number) => void>(() => {});
-    applyHitRef.current = applyHit;
 
     const posFollowRef = useRef<PositionFollow | null>(null);
     posFollowRef.current ??= createPositionFollow({
@@ -296,12 +309,12 @@ export function createCardMotion(rt: CardMotionRuntime) {
           return r ? { x: r.left, y: r.top } : null;
         },
         getVel: () => flight.velocity(),
-        applyVelocity: (vx, vy) => applyHitRef.current(vx, vy),
+        applyVelocity: (vx, vy) => applyVelocityRef.current(vx, vy, 'set'),
       };
       return () => {
         delete arenaSlots[petId];
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖由碰撞注册身份 petId/size/bottomPad/arena 决定：applyHit 只经 applyHitRef 转发、不捕获渲染期状态；补上它会让碰撞槽每渲染注销重注册
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖由碰撞注册身份 petId/size/bottomPad/arena 决定：applyVelocity 只经 applyVelocityRef 转发、不捕获渲染期状态；补上它会让碰撞槽每渲染注销重注册
     }, [petId, size, bottomPad, arena]);
 
     const center = (): { x: number; y: number } => ({ x: currentCenterX(), y: currentCenterY() });

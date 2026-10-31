@@ -146,15 +146,18 @@ export const es: Record<Key, string> = {
   physicsTitle: 'Física (sensación al arrastrar y lanzar)',
   physicsHint:
     'Valor predeterminado global, compartido por todas las mascotas (un pet pack puede sobrescribirlo en el archivo de su propio tipo); se escribe en la configuración del usuario al "Guardar" (nunca al instante). En el navegador se aplica al instante; en el escritorio se aplica cuando Guardar recarga las ventanas de mascotas.',
-  'physics.gravity': 'Gravedad (gravity)',
+  mobileTitle: 'Efectos móviles',
+  mobileHint:
+    'Solo tienen sentido en el navegador del móvil: la vibración necesita motor, los dos interruptores de movimiento necesitan sensores de inclinación/aceleración, y los sensores exigen HTTPS o localhost.',
+  'physics.gravity': 'Gravedad',
   'physics.gravityHint': 'px/s²: cuanto mayor, más rápido cae; 0 = sin gravedad (vuela en línea recta para siempre)',
-  'physics.restitution': 'Rebote (restitution)',
+  'physics.restitution': 'Rebote',
   'physics.restitutionHint':
     '0–1, velocidad que se conserva al rebotar en una pared o el suelo (1 = completamente elástico, 0 = se detiene en seco)',
-  'physics.groundFriction': 'Fricción con el suelo (groundFriction)',
+  'physics.groundFriction': 'Fricción con el suelo',
   'physics.groundFrictionHint':
     'por segundo, amortiguación horizontal mientras está en el suelo; 0 = hielo sin fricción',
-  'physics.throwPower': 'Fuerza de lanzamiento (throwPower)',
+  'physics.throwPower': 'Fuerza de lanzamiento',
   'physics.throwPowerHint':
     '> 0, multiplicador general del seguimiento con resorte y de la velocidad de salida (1 = predeterminado; más alto = sigue más pegado y lanza más fuerte)',
   physicsCeilingBounce: 'Rebote en el techo',
@@ -165,9 +168,12 @@ export const es: Record<Key, string> = {
   physicsHaptic: 'Vibración al chocar',
   physicsHapticHint:
     'Una vibración por impacto (paredes, suelo, techo, otras mascotas). Funciona en Chrome/Edge; no en iOS ni en navegadores WebView como Via. El modo No molestar la bloquea.',
-  physicsDeviceMotion: 'Control por inclinación (deviceMotion)',
-  physicsDeviceMotionHint:
-    'Inclina el móvil y la gravedad lo sigue (magnitud = el valor de arriba); agita para lanzar la mascota en esa dirección. Requiere HTTPS/localhost; sin sensores no hace nada.',
+  physicsTilt: 'Gravedad por inclinación',
+  physicsTiltHint:
+    'Inclina el móvil y la gravedad lo sigue (magnitud = el valor de arriba); con gravedad en 0 la inclinación no hace nada. Requiere HTTPS/localhost.',
+  physicsShake: 'Agitar para lanzar',
+  physicsShakeHint:
+    'Agita para lanzar la mascota en la dirección del gesto; la fuerza escala con throwPower. No depende de la gravedad, así que funciona con gravedad 0. Requiere HTTPS/localhost.',
   invalidPhysics:
     'Revisa los parámetros de física: gravedad / fricción con el suelo ≥ 0, rebote 0–1, fuerza de lanzamiento > 0.',
   fontTitle: 'Apariencia y fuente',

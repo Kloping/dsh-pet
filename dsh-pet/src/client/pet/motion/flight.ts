@@ -84,7 +84,7 @@ export interface Flight {
    */
   setVelocity(vx: number, vy: number): void;
   /**
-   * 叠加一个冲量（摇一摇）；没在跑就先起常驻模式再加。
+   * 叠加一个冲量（摇一摇）；没在跑时忽略——起不起飞、以什么模式起飞由调用方决定。
    *
    * @param dvx - 横向冲量（px/s）。
    * @param dvy - 纵向冲量（px/s）。
@@ -121,8 +121,6 @@ export function createFlight(deps: FlightDeps): Flight {
   let held = false;
   /** 常驻模式的静默时长（ms）：重力为零且速度低时累计，到点停帧。 */
   let quietMs = 0;
-  /** 起步前收到的摇一摇冲量（先到冲量、后起步时用）。 */
-  let pending: { vx: number; vy: number } | null = null;
 
   /** 互撞结算：规则在 pet-collision，这里只把撞击转成触觉回调。 */
   const resolveCollisions: PetCollisionResolver = createPetCollision({
@@ -140,7 +138,6 @@ export function createFlight(deps: FlightDeps): Flight {
     state = null;
     held = false;
     quietMs = 0;
-    pending = null;
   };
 
   const start = (px: number, py: number, vx: number, vy: number): void => {
@@ -171,19 +168,15 @@ export function createFlight(deps: FlightDeps): Flight {
   };
 
   /**
-   * 叠加一个冲量（摇一摇）；没在跑就先起常驻模式再加。
+   * 叠加一个冲量（摇一摇）：只在已经在跑时有效——没在跑时由调用方按抛掷起飞。
    *
    * @param dvx - 横向冲量（px/s）。
    * @param dvy - 纵向冲量（px/s）。
    */
   const impulse = (dvx: number, dvy: number): void => {
-    if (state !== null) {
-      state.vx += dvx;
-      state.vy += dvy;
-      return;
-    }
-    pending = { vx: (pending?.vx ?? 0) + dvx, vy: (pending?.vy ?? 0) + dvy };
-    startHeld();
+    if (state === null) return;
+    state.vx += dvx;
+    state.vy += dvy;
   };
 
   const run = (px: number, py: number, vx: number, vy: number): void => {
@@ -197,11 +190,6 @@ export function createFlight(deps: FlightDeps): Flight {
       sideAllow: metrics.sideAllow,
     });
     const own = ++token;
-    if (pending !== null) {
-      vx += pending.vx;
-      vy += pending.vy;
-      pending = null;
-    }
     quietMs = 0;
     let current: ThrowState = { x: px, y: py, vx, vy };
     let last = performance.now();

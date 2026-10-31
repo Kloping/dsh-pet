@@ -852,12 +852,15 @@ describe('saveUserConfig —— 物理参数 physics（白名单 + 透传保留�
     assert.equal(saveOnce({ pets: PETS, physics: { ...PHYS, hapticEnabled: 'yes' } }), null);
   });
 
-  test('deviceMotion：缺键合法（默认关），非布尔整段拒绝', () => {
+  test('tiltGravity / shakeThrow：缺键合法（默认关），非布尔整段拒绝', () => {
     const missing: Record<string, unknown> = { ...PHYS };
-    delete missing.deviceMotion;
+    delete missing.tiltGravity;
+    delete missing.shakeThrow;
     assert.ok(saveOnce({ pets: PETS, physics: missing }), '缺键不该被整段拒绝');
-    assert.ok(saveOnce({ pets: PETS, physics: { ...PHYS, deviceMotion: true } }), '显式开启要能落盘');
-    assert.equal(saveOnce({ pets: PETS, physics: { ...PHYS, deviceMotion: 'on' } }), null);
+    assert.ok(saveOnce({ pets: PETS, physics: { ...PHYS, tiltGravity: true } }), '单独开倾斜要能落盘');
+    assert.ok(saveOnce({ pets: PETS, physics: { ...PHYS, shakeThrow: true } }), '单独开摇一摇要能落盘');
+    assert.equal(saveOnce({ pets: PETS, physics: { ...PHYS, tiltGravity: 'on' } }), null);
+    assert.equal(saveOnce({ pets: PETS, physics: { ...PHYS, shakeThrow: 1 } }), null);
   });
 
   test('非法值 → 整体拒绝（宿主回 400；与读取侧 physicsValid 同一套规则）', () => {

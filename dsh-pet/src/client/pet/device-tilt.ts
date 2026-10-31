@@ -104,25 +104,36 @@ export function canReadMotionSensors(): boolean {
   return typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceMotionEvent !== 'undefined';
 }
 
+/** 本次要申请授权的传感器种类：只问真正要用的那一个事件。 */
+export interface MotionSensorKinds {
+  /** 倾斜（deviceorientation）。 */
+  readonly tilt: boolean;
+  /** 摇一摇（devicemotion）。 */
+  readonly shake: boolean;
+}
+
 /**
- * 请求传感器权限（iOS 13+ 必需，且必须在用户手势里调用）。
+ * 请求传感器权限（iOS 13+ 必需，且必须在用户手势里调用）；只申请本次要用的种类。
  *
- * @returns 授权或被拒都 resolve；环境没有 requestPermission 时视为已授权。
+ * @param kinds - 需要授权的种类；两个都关时什么都不问，直接 resolve `true`。
+ * @returns 全部申请成功（或环境本来就不需要授权）时为 `true`；任一种被拒、或该事件类型在此上下文里不存在
+ *  （非安全上下文，HTTP 下两个全局类型都没有）时为 `false`。
  */
-export async function requestMotionPermission(): Promise<boolean> {
+export async function requestMotionPermission(kinds: MotionSensorKinds): Promise<boolean> {
   const ask = async (ctor: unknown): Promise<boolean> => {
-    const fn = (ctor as { requestPermission?: () => Promise<string> } | undefined)?.requestPermission;
-    if (typeof fn !== 'function') return true;
+    if (ctor === undefined) return false;
+    const fn = (ctor as { requestPermission?: () => Promise<string> }).requestPermission;
+    if (typeof fn !== 'function') return true; // 安卓 / 桌面没有这个 API，视为已授权
     try {
-      return (await fn()) === 'granted';
+      return (await fn.call(ctor)) === 'granted';
     } catch {
       return false;
     }
   };
-  if (typeof DeviceOrientationEvent === 'undefined') return false;
-  const orientationOk = await ask(DeviceOrientationEvent);
-  const motionOk = typeof DeviceMotionEvent === 'undefined' ? orientationOk : await ask(DeviceMotionEvent);
-  return orientationOk && motionOk;
+  const granted: boolean[] = [];
+  if (kinds.tilt) granted.push(await ask(globalThis.DeviceOrientationEvent));
+  if (kinds.shake) granted.push(await ask(globalThis.DeviceMotionEvent));
+  return granted.every(Boolean);
 }
 
 /**

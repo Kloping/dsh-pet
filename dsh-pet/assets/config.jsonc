@@ -134,13 +134,13 @@
   // 也可在用户配置（main-config.jsonc）顶层覆盖，设置页保存宠物时会保留该字段。
   "notificationsEnabled": true,
   // ===================== 点击音效开关 =====================
-  // true = 点一下宠物播一声内置音效（assets/sound/click-duck.wav，音量固定 0.5；
+  // true（默认）= 点一下宠物播一声内置音效（assets/sound/click-duck.wav，音量固定 0.5；
   //   100ms 内的连续点击只响一次，多开时也不会叠成一片）。
-  // false（默认）= 完全静音——新增音效不突袭既有用户，想听的人自己去设置页打开。
+  // false = 完全静音（设置页「全局开关」里的「点击音效」写的就是它）。
   // 必填布尔值，缺失即配置错误；
   // 也可在用户配置（main-config.jsonc）顶层覆盖，设置页「全局开关」里的开关写的就是它。
   // 只读 main 条目这一份（pet pack 种类文件不单独覆盖），改动后保存即生效。
-  "clickSoundEnabled": false,
+  "clickSoundEnabled": true,
   // ===================== 锁定在当前屏幕（根字段，不属于 physics） =====================
   // 多屏用户：true = 宠物只在**当前所在那块屏幕**内活动——
   //   抛掷：只在松手时所在那块屏内弹（屏缝当墙，不飞到隔壁屏）；
@@ -186,22 +186,25 @@
   //   抛掷可飞出屏幕顶部（超出可视区域，重力仍会拉回落）。默认 true。
   // throwPower：总力度（拖拽/抛掷输出增益）。弹簧跟手（K/C）、甩抛初速与软上限 3600 整体 ×p：
   //   1.0 = 现状；>1 = 跟手更贴、甩得更猛、可达到的上限更高；<1 = 松弛、更易温柔放下。必须 > 0。
-  // petCollision：多宠物互相碰撞开关。true = 飞行中被甩出的宠物撞到其它宠物时，
-  //   按动量守恒 + 恢复系数 0.995 弹开（质量 ∝ size²）；false = 关闭（默认，宠物互相穿过）。
+  // petCollision：多宠物互相碰撞开关。true（默认）= 飞行中被甩出的宠物撞到其它宠物时，
+  //   按动量守恒 + 恢复系数 0.995 弹开（质量 ∝ size²）；false = 互相穿过（设置页「物理」卡可关）。
   // hapticEnabled：碰撞震动。true（默认）= 撞墙/落地/撞顶与宠物互撞时各震一下；
   //   只在支持 Vibration API 的浏览器生效（安卓），iOS 与桌面端没有硬件，会静默跳过。
-  // deviceMotion：体感控制。true = 手机倾斜方向代替固定向下的重力（大小仍由 gravity 决定，
-  //   竖直时取满值），摇一摇沿甩动方向给一次冲量（力度 = 基准 × throwPower）；false = 关闭（默认）。
-  //   传感器只在 HTTPS / localhost 下可用。
+  // tiltGravity：倾斜控制重力。true = 手机倾斜方向代替固定向下的重力（大小仍由 gravity 决定，
+  //   竖直时取满值；gravity=0 时无从取值，等同关闭）；false = 关闭（默认）。
+  // shakeThrow：摇一摇抛出。true = 摇一摇沿甩动方向把宠物甩出去（力度 = 基准 × throwPower），
+  //   与重力大小无关，gravity=0 时也能甩；false = 关闭（默认）。
+  //   两个体感开关都只在 HTTPS / localhost 下有效（传感器 API 只在安全上下文存在）。
   "physics": {
     "gravity": 1400,
     "restitution": 0.78,
     "groundFriction": 2.5,
     "ceilingBounce": true,
     "throwPower": 1.0,
-    "petCollision": false,
+    "petCollision": true,
     "hapticEnabled": true,
-    "deviceMotion": false
+    "tiltGravity": false,
+    "shakeThrow": false
   },
   // ===================== 字体（全局默认，所有宠物共用；种类文件顶层可覆盖） =====================
   // family：字体种类（预设 id，必须在白名单内，写错即配置错误 → 告警并取默认 candy）。

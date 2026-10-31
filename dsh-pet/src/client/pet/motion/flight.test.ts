@@ -212,17 +212,18 @@ describe('createFlight —— 外部写入速度', () => {
     }
   });
 
-  test('impulse 是叠加；没在跑时先起常驻模式', () => {
+  test('impulse 是叠加：只对已经在跑的宠物生效', () => {
     const frames = withFakeFrames();
     try {
       const { flight } = harness();
-      assert.equal(flight.isHeld(), false);
-      flight.impulse(400, 0);
-      assert.equal(flight.isHeld(), true, '摇一摇应起常驻模式');
+      flight.impulse(400, 0); // 没在跑：忽略，起不起飞由卡片装配决定
+      assert.equal(flight.isFlying(), false);
+      assert.deepEqual(flight.velocity(), { vx: 0, vy: 0 });
+
+      flight.start(400, 100, 100, 0);
       frames.tick(16);
-      assert.ok(flight.velocity().vx > 300, `冲量应加进速度：${flight.velocity().vx}`);
       flight.impulse(200, 0);
-      assert.ok(flight.velocity().vx > 500, '在跑时应继续叠加');
+      assert.ok(flight.velocity().vx > 250, `冲量应加进速度：${flight.velocity().vx}`);
     } finally {
       frames.restore();
     }

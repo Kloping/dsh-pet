@@ -141,25 +141,31 @@ export const ja: Record<Key, string> = {
   physicsTitle: '物理（ドラッグ＆投げの感触）',
   physicsHint:
     'グローバルデフォルトで、すべてのペットに共通です（pet pack は自身の種類ファイルで個別に上書きできます）。「保存」時にユーザー設定へ書き込まれます（即時書き込みはしません）。ブラウザでは保存後すぐに反映され、デスクトップでは保存でペットウィンドウが再読み込みされてから反映されます。',
-  'physics.gravity': '重力 (gravity)',
+  mobileTitle: 'モバイル向け効果',
+  mobileHint:
+    'スマホのブラウザでのみ意味があります。振動にはモーター、2 つの体感スイッチには傾き／加速度センサーが必要で、センサーは HTTPS または localhost でのみ使えます。',
+  'physics.gravity': '重力',
   'physics.gravityHint': 'px/s²。大きいほど速く落下します。0 = 無重力（投げると等速直線運動で飛び続けます）',
-  'physics.restitution': '弾性 (restitution)',
+  'physics.restitution': '弾性',
   'physics.restitutionHint': '0～1。壁や床に当たったときに残る速度の割合（1 = 完全弾性、0 = 当たった瞬間に停止）',
-  'physics.groundFriction': '地面摩擦 (groundFriction)',
+  'physics.groundFriction': '地面摩擦',
   'physics.groundFrictionHint': '/s。着地後の水平速度の減衰率。0 = 氷の上のように減速しない',
-  'physics.throwPower': '投げる力 (throwPower)',
+  'physics.throwPower': '投げる力',
   'physics.throwPowerHint':
     '> 0。バネの追従性と投げ出しの初速の全体倍率（1 = デフォルト。大きいほどよく追従し、勢いよく飛びます）',
-  physicsCeilingBounce: '天井での跳ね返り (ceilingBounce)',
+  physicsCeilingBounce: '天井での跳ね返り',
   physicsCeilingBounceHint: 'オフにすると、投げたペットが画面の上端を越えて飛び出せます（重力が引き戻します）',
-  physicsPetCollision: 'ペット同士の衝突 (petCollision)',
+  physicsPetCollision: 'ペット同士の衝突',
   physicsPetCollisionHint: '飛行中のペットが他のペットに当たると、運動量保存に従って弾き返されます（質量 ∝ サイズ²）',
   physicsHaptic: '衝突時の振動',
   physicsHapticHint:
     '壁・床・天井・ペット同士の衝突ごとに 1 回振動します。Chrome / Edge で動作。iOS と Via のような WebView ブラウザでは無効。サイレント/集中モードは振動を止めます。',
-  physicsDeviceMotion: '傾き操作 (deviceMotion)',
-  physicsDeviceMotionHint:
-    '端末を傾けると重力がそちらへ向かいます（大きさは上の重力値）。振ると振った方向へペットを飛ばします。HTTPS/localhost が必要で、センサーがない環境では無効です。',
+  physicsTilt: '傾きで重力',
+  physicsTiltHint:
+    '端末を傾けると重力がそちらへ向かいます（大きさは上の重力値）。重力が 0 のときは傾けても効果がありません。HTTPS/localhost が必要です。',
+  physicsShake: '振って投げる',
+  physicsShakeHint:
+    '振った方向へペットを飛ばします。強さは投げる力（throwPower）に比例し、重力とは無関係なので重力 0 でも使えます。HTTPS/localhost が必要です。',
   invalidPhysics: '物理パラメータを確認してください：重力 / 地面摩擦 ≥ 0、弾性 0～1、投げる力 > 0。',
   fontTitle: '外観とフォント',
   fontHint:
