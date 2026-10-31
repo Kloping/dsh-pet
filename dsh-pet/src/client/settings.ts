@@ -19,7 +19,7 @@ import { type DialogState, makeDialog } from './settings/dialog.ts';
 import { makeFontCard } from './settings/font-card.ts';
 import { makeGlobalCard, type GlobalFlagKey, type GlobalFlags } from './settings/global-card.ts';
 import { makeLoadStatus } from './settings/load-status.ts';
-import { makeModelCard, type ModelFieldKey } from './settings/model-card.ts';
+import { makeModelCard, type ChatFlagKey, type ChatFlagValues, type ModelFieldKey } from './settings/model-card.ts';
 import { makeMobileCard } from './settings/mobile-card.ts';
 import { makeModelPicker } from './settings/picker/index.ts';
 import { makeVoicePicker } from './settings/picker/voice-picker.ts';
@@ -206,28 +206,32 @@ export function makePetConfigSection(rt: SettingsRuntime): FunctionComponent<{ c
     // 文件宠物条目数：只用于标题提示「另 n 只来自 pet/ 目录」。
     const packCount = kinds.filter((item) => item.kind === 'pack').length;
 
-    // 七个全局开关的当前值：卡片只认这个对象，键名与成品配置字段同名。
+    // 七个顶层开关的当前值：卡片各认自己那几项，键名与成品配置字段同名。
     const globalFlags: GlobalFlags = {
       notificationsEnabled: notifyEnabled,
       clickSoundEnabled: clickSound,
-      whisperImageEnabled: whisperImage,
-      chatImageEnabled: chatImage,
-      chatAnimationEnabled: chatAnimation,
       confineToScreen: confineScreen,
       trayEnabled,
     };
+    const chatFlags: ChatFlagValues = {
+      whisperImageEnabled: whisperImage,
+      chatImageEnabled: chatImage,
+      chatAnimationEnabled: chatAnimation,
+    };
 
     // 通知开关要借用户手势申请权限，其余六个是纯 setState；统一成「键名 → setter」的查表，避免长 switch。
-    const globalSetters: Record<GlobalFlagKey, (value: boolean) => void> = {
+    // 两束开关共用这张表：键名到 setter 的映射只写一遍，卡片只管回传键名。
+    const flagSetters: Record<GlobalFlagKey | ChatFlagKey, (value: boolean) => void> = {
       notificationsEnabled: (value) => void toggleNotify(value),
       clickSoundEnabled: setClickSound,
+      confineToScreen: setConfineScreen,
+      trayEnabled: setTrayEnabled,
       whisperImageEnabled: setWhisperImage,
       chatImageEnabled: setChatImage,
       chatAnimationEnabled: setChatAnimation,
-      confineToScreen: setConfineScreen,
-      trayEnabled: setTrayEnabled,
     };
-    const setGlobalFlag = (key: GlobalFlagKey, value: boolean): void => globalSetters[key](value);
+    const setGlobalFlag = (key: GlobalFlagKey, value: boolean): void => flagSetters[key](value);
+    const setChatFlag = (key: ChatFlagKey, value: boolean): void => flagSetters[key](value);
 
     /** 局部补丁写入：字体与物理参数都是「整段对象 + 改几个字段」。 */
     const patchFont = (patch: Partial<FontConfig>): void => setFont((current) => ({ ...current, ...patch }));
@@ -350,6 +354,8 @@ export function makePetConfigSection(rt: SettingsRuntime): FunctionComponent<{ c
           chatImageLimit,
           onChatMemoryChange: setChatMemory,
           onChatImageLimitChange: setChatImageLimit,
+          values: chatFlags,
+          onFlagChange: setChatFlag,
         }),
         h(PhysicsCard, { busy, physics, onChange: patchPhysics }),
         h(MobileCard, { busy, physics, onChange: patchPhysics }),
