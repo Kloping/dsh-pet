@@ -163,6 +163,9 @@ export const fr: Record<Key, string> = {
   physicsHaptic: 'Vibration aux collisions',
   physicsHapticHint:
     'Une vibration par impact (murs, sol, plafond, autres compagnons). Fonctionne dans Chrome/Edge ; pas sur iOS ni dans les coques WebView comme Via. Le mode Ne pas déranger la bloque.',
+  physicsDeviceMotion: 'Contrôle par inclinaison (deviceMotion)',
+  physicsDeviceMotionHint:
+    'Inclinez le téléphone : la gravité suit (valeur = celle ci-dessus) ; secouez pour lancer le compagnon dans le sens du geste. Nécessite HTTPS/localhost ; sans capteurs, aucun effet.',
   invalidPhysics:
     'Vérifiez les paramètres physiques : gravité / frottement au sol ≥ 0, rebond entre 0 et 1, force de lancer > 0.',
   fontTitle: 'Apparence et police',

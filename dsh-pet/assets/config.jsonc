@@ -190,6 +190,9 @@
   //   按动量守恒 + 恢复系数 0.995 弹开（质量 ∝ size²）；false = 关闭（默认，宠物互相穿过）。
   // hapticEnabled：碰撞震动。true（默认）= 撞墙/落地/撞顶与宠物互撞时各震一下；
   //   只在支持 Vibration API 的浏览器生效（安卓），iOS 与桌面端没有硬件，会静默跳过。
+  // deviceMotion：体感控制。true = 手机倾斜方向代替固定向下的重力（大小仍由 gravity 决定，
+  //   竖直时取满值），摇一摇沿甩动方向给一次冲量（力度 = 基准 × throwPower）；false = 关闭（默认）。
+  //   传感器只在 HTTPS / localhost 下可用。
   "physics": {
     "gravity": 1400,
     "restitution": 0.78,
@@ -197,7 +200,8 @@
     "ceilingBounce": true,
     "throwPower": 1.0,
     "petCollision": false,
-    "hapticEnabled": true
+    "hapticEnabled": true,
+    "deviceMotion": false
   },
   // ===================== 字体（全局默认，所有宠物共用；种类文件顶层可覆盖） =====================
   // family：字体种类（预设 id，必须在白名单内，写错即配置错误 → 告警并取默认 candy）。

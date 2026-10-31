@@ -104,8 +104,9 @@ export function physicsValid(value: unknown): boolean {
     Number.isFinite(tp) &&
     tp > 0 &&
     typeof p.petCollision === 'boolean' &&
-    // 可选：旧配置（与手写配置）没有这个键，缺省即开启——缺键不算整段非法。
-    (p.hapticEnabled === undefined || typeof p.hapticEnabled === 'boolean')
+    // 可选：旧配置（与手写配置）没有这两个键，各按默认处理（hapticEnabled 开、deviceMotion 关），缺键不算整段非法。
+    (p.hapticEnabled === undefined || typeof p.hapticEnabled === 'boolean') &&
+    (p.deviceMotion === undefined || typeof p.deviceMotion === 'boolean')
   );
 }
 

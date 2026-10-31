@@ -10,7 +10,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { bodyPixelBox, collidePet, rectsOverlap, type PetCollider } from './collide.ts';
+import { bodyPixelBox, collidePet, overlapPush, rectsOverlap, type PetCollider } from './collide.ts';
 import { PET_BOUNCE_E } from './constants.ts';
 import { HIT_BOX } from '../constants.ts';
 
@@ -35,6 +35,24 @@ describe('bodyPixelBox —— 命中框比例换算到像素', () => {
     assert.equal(a.right, b.right);
     assert.equal(b.top - a.top, 40);
     assert.equal(b.bottom - a.bottom, 40);
+  });
+});
+
+describe('overlapPush —— 重叠时的几何推出', () => {
+  const r = (left: number, top: number, right: number, bottom: number) => ({ left, top, right, bottom });
+
+  test('不重叠 / 恰好贴边 → null', () => {
+    assert.equal(overlapPush(r(0, 0, 10, 10), r(20, 0, 30, 10)), null);
+    assert.equal(overlapPush(r(0, 0, 10, 10), r(10, 0, 20, 10)), null);
+  });
+
+  test('横向重叠更浅时沿水平推开，各让一半', () => {
+    // 横向重叠 4，纵向重叠 8 → 沿 x 推 2
+    assert.deepEqual(overlapPush(r(0, 0, 10, 10), r(6, 2, 16, 12)), { dx: -2, dy: 0 });
+  });
+
+  test('纵向重叠更浅时沿垂直推开', () => {
+    assert.deepEqual(overlapPush(r(0, 0, 10, 10), r(2, 8, 12, 18)), { dx: 0, dy: -1 });
   });
 });
 

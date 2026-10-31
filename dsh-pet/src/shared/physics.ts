@@ -47,7 +47,7 @@ export {
   throwStepRegion,
   throwSubsteps,
 } from './physics/throw.ts';
-export type { DragSample, ThrowBounds, ThrowSpace, ThrowState } from './physics/throw.ts';
+export type { DragSample, GravityVector, ThrowBounds, ThrowSpace, ThrowState } from './physics/throw.ts';
 export {
   estimateReleaseVelocity,
   pullAngle,
@@ -58,5 +58,5 @@ export {
   trimTrail,
 } from './physics/release.ts';
 export { softClampSpeed, springStep } from './physics/spring.ts';
-export { bodyPixelBox, collidePet, rectsOverlap } from './physics/collide.ts';
+export { bodyPixelBox, collidePet, overlapPush, rectsOverlap } from './physics/collide.ts';
 export type { PetCollider, PetCollisionSlot } from './physics/collide.ts';

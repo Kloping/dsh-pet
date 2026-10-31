@@ -157,6 +157,9 @@ export const ja: Record<Key, string> = {
   physicsHaptic: '衝突時の振動',
   physicsHapticHint:
     '壁・床・天井・ペット同士の衝突ごとに 1 回振動します。Chrome / Edge で動作。iOS と Via のような WebView ブラウザでは無効。サイレント/集中モードは振動を止めます。',
+  physicsDeviceMotion: '傾き操作 (deviceMotion)',
+  physicsDeviceMotionHint:
+    '端末を傾けると重力がそちらへ向かいます（大きさは上の重力値）。振ると振った方向へペットを飛ばします。HTTPS/localhost が必要で、センサーがない環境では無効です。',
   invalidPhysics: '物理パラメータを確認してください：重力 / 地面摩擦 ≥ 0、弾性 0～1、投げる力 > 0。',
   fontTitle: '外観とフォント',
   fontHint:

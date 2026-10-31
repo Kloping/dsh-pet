@@ -62,6 +62,7 @@ export const DEFAULT_PHYSICS: PhysicsParams = {
   throwPower: 1,
   petCollision: false,
   hapticEnabled: true,
+  deviceMotion: false,
 };
 
 /** 总力度默认量（throwPower=1 即现状）。 */

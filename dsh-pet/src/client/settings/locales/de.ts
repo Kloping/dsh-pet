@@ -160,6 +160,9 @@ export const de: Record<Key, string> = {
   physicsHaptic: 'Kollisions-Vibration',
   physicsHapticHint:
     'Ein Impuls pro Treffer (Wand, Boden, Decke, andere Pets). Funktioniert in Chrome/Edge; nicht auf iOS oder in WebView-Hüllen wie Via. „Nicht stören“ blockiert die Vibration.',
+  physicsDeviceMotion: 'Neigungssteuerung (deviceMotion)',
+  physicsDeviceMotionHint:
+    'Handy neigen: die Schwerkraft folgt der Neigung (Betrag = der Wert oben). Schütteln schleudert den Pet in Wurfrichtung. Benötigt HTTPS/localhost; ohne Sensoren wirkungslos.',
   invalidPhysics: 'Bitte Physikwerte prüfen: Schwerkraft / Bodenreibung ≥ 0, Elastizität 0–1, Wurfkraft > 0.',
   fontTitle: 'Aussehen & Schrift',
   fontHint:

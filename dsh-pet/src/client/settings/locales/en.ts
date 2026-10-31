@@ -160,6 +160,9 @@ export const en: Record<Key, string> = {
   physicsHaptic: 'Collision haptics',
   physicsHapticHint:
     'One buzz per hit (walls, floor, ceiling, other pets). Works in Chrome/Edge; not on iOS or WebView shells like Via. Do Not Disturb blocks it.',
+  physicsDeviceMotion: 'Tilt control (deviceMotion)',
+  physicsDeviceMotionHint:
+    'Tilt the phone and gravity follows it (magnitude = the gravity value above); shake to fling the pet along the shake. Requires HTTPS/localhost; no effect without sensors.',
   invalidPhysics: 'Check the physics values: gravity / ground friction ≥ 0, bounciness 0–1, throw power > 0.',
   fontTitle: 'Appearance & font',
   fontHint:

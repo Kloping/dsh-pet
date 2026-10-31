@@ -1,11 +1,12 @@
 /**
- * 物理卡（全局）：重力、弹性、地面摩擦、抛掷力度，以及天花板反弹与宠物互撞两个开关。
+ * 物理卡（全局）：重力、弹性、地面摩擦、抛掷力度，以及顶部反弹 / 宠物互撞 / 碰撞震动 / 体感四个开关。
  * 只改本地状态，随「保存」整包写入；浏览器保存后即时生效，桌面端由保存触发的 Helper 重启重读——
  * physics 在 sprite 构造时只读一次，所以这里不做即时写入。
  * @module dsh-pet/src/client/settings/physics-card
  */
 import type { FunctionComponent } from 'react';
 import type { PhysicsParams } from '../../shared/types.ts';
+import { requestMotionPermission } from '../pet/device-tilt.ts';
 import type { SettingsRuntime } from './runtime.ts';
 import { makeUiKit, numberInputProps } from './ui.ts';
 
@@ -66,6 +67,11 @@ export function makePhysicsCard(rt: SettingsRuntime): FunctionComponent<PhysicsC
             toggleCell('physicsHaptic', physics.hapticEnabled !== false, busy, (v) =>
               props.onChange({ hapticEnabled: v }),
             ),
+            toggleCell('physicsDeviceMotion', physics.deviceMotion === true, busy, (v) => {
+              // iOS 13+ 要求传感器权限必须在用户手势里申请；开关点击正好是那次手势。
+              if (v) void requestMotionPermission();
+              props.onChange({ deviceMotion: v });
+            }),
           ],
         }),
       ],

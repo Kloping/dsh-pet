@@ -77,6 +77,34 @@ export const collidePet = (
   };
 };
 
+/**
+ * 两个身体框重叠时的最短推出位移：只算几何、不碰速度。
+ *
+ * 速度交换（{@link collidePet}）在两者正在分离时返回 null，光靠它会让已经插在一起的两只
+ * 直接穿过去；补这一个纯位移量才能把它们推开。
+ *
+ * @param a - 自己的身体框。
+ * @param b - 对方的身体框。
+ * @returns 推 a 离 b 的位移（各让一半）；不重叠时返回 `null`。
+ */
+export const overlapPush = (
+  a: { left: number; top: number; right: number; bottom: number },
+  b: { left: number; top: number; right: number; bottom: number },
+): { dx: number; dy: number } | null => {
+  const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+  const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+  if (ox <= 0 || oy <= 0) return null;
+  const alongX = ox <= oy;
+  const sign = alongX
+    ? (a.left + a.right) / 2 >= (b.left + b.right) / 2
+      ? 1
+      : -1
+    : (a.top + a.bottom) / 2 >= (b.top + b.bottom) / 2
+      ? 1
+      : -1;
+  return alongX ? { dx: (sign * ox) / 2, dy: 0 } : { dx: 0, dy: (sign * oy) / 2 };
+};
+
 /** 共享碰撞站场的槽位（每只宠物注册一个；浏览器半侧 PetMulti 与桌面端的碰撞 broker 共用）。 */
 export interface PetCollisionSlot {
   /** 宠物宽（px，质量 ∝ size²） */
@@ -85,8 +113,8 @@ export interface PetCollisionSlot {
   bottomPad: number;
   /** 当前包围盒左上角（px）；null = 未挂载或无位置 */
   getBox: () => { x: number; y: number } | null;
-  /** 当前速度（px/s）；非飞行中为 0 */
+  /** 当前速度（px/s）；没在运动时为 0 */
   getVel: () => { vx: number; vy: number };
-  /** 被撞回调：用新初速从当前落点重新抛掷 */
-  onHit: (vx: number, vy: number) => void;
+  /** 写入碰撞结算后的**绝对**速度（px/s）：由宠物自己按当前模式落地——在动就改速度，没动就以此起飞。 */
+  applyVelocity: (vx: number, vy: number) => void;
 }

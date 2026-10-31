@@ -165,6 +165,9 @@ export const es: Record<Key, string> = {
   physicsHaptic: 'Vibración al chocar',
   physicsHapticHint:
     'Una vibración por impacto (paredes, suelo, techo, otras mascotas). Funciona en Chrome/Edge; no en iOS ni en navegadores WebView como Via. El modo No molestar la bloquea.',
+  physicsDeviceMotion: 'Control por inclinación (deviceMotion)',
+  physicsDeviceMotionHint:
+    'Inclina el móvil y la gravedad lo sigue (magnitud = el valor de arriba); agita para lanzar la mascota en esa dirección. Requiere HTTPS/localhost; sin sensores no hace nada.',
   invalidPhysics:
     'Revisa los parámetros de física: gravedad / fricción con el suelo ≥ 0, rebote 0–1, fuerza de lanzamiento > 0.',
   fontTitle: 'Apariencia y fuente',

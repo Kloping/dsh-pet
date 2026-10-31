@@ -91,18 +91,27 @@ export interface ThrowHit {
   speed: number;
 }
 
+/** 平面重力向量（px/s²）：体感模式把重力方向交给手机姿态，默认仍是竖直向下。 */
+export interface GravityVector {
+  readonly gx: number;
+  readonly gy: number;
+}
+
 /** 抛体单步积分与边界反弹。返回值带上两个标志：bounced = 本步是否碰边或落地，
  *  atRest = 贴地且低速（或碰边后整体低速），调用方应停止循环。
- *  physics 取成品配置的物理参数，缺失时用默认值兜底。 */
+ *  physics 取成品配置的物理参数，缺失时用默认值兜底；gravity 覆盖重力方向与大小（缺省竖直向下）。 */
 export const throwStep = (
   s: ThrowState,
   dtRaw: number,
   b: ThrowBounds,
   physics: PhysicsParams = DEFAULT_PHYSICS,
+  gravity?: GravityVector,
 ): ThrowState & { bounced: boolean; atRest: boolean; hit: ThrowHit | null } => {
   const dt = Math.min(Math.max(dtRaw, 0), MAX_STEP_DT);
+  const g: GravityVector = gravity ?? { gx: 0, gy: physics.gravity };
   let { x, y, vx, vy } = s;
-  vy += physics.gravity * dt;
+  vx += g.gx * dt;
+  vy += g.gy * dt;
   x += vx * dt;
   y += vy * dt;
   let bounced = false;
@@ -158,10 +167,13 @@ export const throwStepRegion = (
   space: ThrowSpace,
   physics: PhysicsParams = DEFAULT_PHYSICS,
   lockScreen = -1,
+  gravity?: GravityVector,
 ): ThrowState & { screen: number; bounced: boolean; atRest: boolean; hit: ThrowHit | null } => {
   const dt = Math.min(Math.max(dtRaw, 0), MAX_STEP_DT);
+  const g: GravityVector = gravity ?? { gx: 0, gy: physics.gravity };
   let { x, y, vx, vy } = s;
-  vy += physics.gravity * dt;
+  vx += g.gx * dt;
+  vy += g.gy * dt;
   x += vx * dt;
   y += vy * dt;
   if (space.areas.length === 0) return { x, y, vx, vy, screen: -1, bounced: false, atRest: false, hit: null };

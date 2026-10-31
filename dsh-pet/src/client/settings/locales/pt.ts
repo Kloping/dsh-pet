@@ -161,6 +161,9 @@ export const pt: Record<Key, string> = {
   physicsHaptic: 'Vibração ao colidir',
   physicsHapticHint:
     'Uma vibração por impacto (paredes, chão, teto, outros pets). Funciona no Chrome/Edge; não no iOS nem em navegadores WebView como o Via. O modo Não perturbe bloqueia o vibrador.',
+  physicsDeviceMotion: 'Controle por inclinação (deviceMotion)',
+  physicsDeviceMotionHint:
+    'Incline o celular e a gravidade acompanha (magnitude = o valor acima); agite para arremessar o pet na direção do gesto. Requer HTTPS/localhost; sem sensores não funciona.',
   invalidPhysics:
     'Revise os valores de física: gravidade / atrito com o chão ≥ 0, restituição 0–1, força de arremesso > 0.',
   fontTitle: 'Aparência e fonte',

@@ -7,14 +7,19 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { DEFAULT_PHYSICS } from '../../../shared/physics/constants.ts';
+import type { PetCollisionSlot } from '../../../shared/physics.ts';
+import type { PhysicsParams } from '../../../shared/types.ts';
 import { createFlight, type FlightDeps } from './flight.ts';
 
 const viewport = { width: 1000, height: 500 };
 const metrics = { size: 200, halfW: 100, halfH: 56.25, sideAllow: 62.5, bottomPad: 10 };
 
-/** 假根节点：只留被写的四个 style 字段。 */
+/** 假根节点：只留被写的四个 style 字段与包围盒。 */
 function fakeRoot() {
-  return { style: { left: '', top: '', right: '', bottom: '' } } as unknown as HTMLDivElement;
+  return {
+    style: { left: '', top: '', right: '', bottom: '' },
+    getBoundingClientRect: () => ({ left: 400, top: 100 }),
+  } as unknown as HTMLDivElement;
 }
 
 /** 装假时钟与 rAF。 */
@@ -52,20 +57,28 @@ function withFakeFrames() {
   };
 }
 
-/** 造一套依赖：记录提交的位置、落地挤压与被写的盒子。 */
-function harness() {
+/** 造一套依赖：记录提交的位置、落地挤压与被写的盒子；可指定 id、共享站场与物理参数。 */
+function harness(
+  opts: {
+    petId?: string;
+    arena?: { slots: Record<string, PetCollisionSlot> };
+    physics?: PhysicsParams;
+  } = {},
+) {
   const root = fakeRoot();
   const live: Array<{ rx: number; ry: number }> = [];
   const finals: Array<{ rx: number; ry: number }> = [];
   const landings: number[] = [];
+  const arena = opts.arena ?? { slots: {} };
+  const physics = opts.physics ?? DEFAULT_PHYSICS;
   let box: { x: number; y: number } | null = null;
   const deps: FlightDeps = {
     root: () => root,
     metrics: () => metrics,
     viewport: () => viewport,
-    physics: () => DEFAULT_PHYSICS,
-    arena: () => ({ slots: {} }),
-    petId: 'main',
+    physics: () => physics,
+    arena: () => arena,
+    petId: opts.petId ?? 'main',
     box: () => box,
     setBox: (next) => {
       box = next;
@@ -74,7 +87,7 @@ function harness() {
     commitFinal: (center) => finals.push(center),
     onLanding: (impactVy) => landings.push(impactVy),
   };
-  return { flight: createFlight(deps), root, live, finals, landings };
+  return { flight: createFlight(deps), root, live, finals, landings, box: () => box };
 }
 
 describe('createFlight —— 飞行与落定', () => {
@@ -175,6 +188,79 @@ describe('createFlight —— 速度与停飞', () => {
       frames.tick(16);
       assert.equal(root.style.left, leftBeforeStop);
       assert.equal(live.length, liveBeforeStop);
+    } finally {
+      frames.restore();
+    }
+  });
+});
+
+describe('createFlight —— 外部写入速度', () => {
+  test('setVelocity 是改写：给的是绝对速度，不叠加自身速度', () => {
+    const frames = withFakeFrames();
+    try {
+      const { flight } = harness();
+      flight.setVelocity(500, 0); // 没在跑：无效果
+      assert.deepEqual(flight.velocity(), { vx: 0, vy: 0 });
+
+      flight.start(400, 100, 300, 0);
+      frames.tick(16);
+      assert.equal(Math.round(flight.velocity().vx), 300);
+      flight.setVelocity(500, 0);
+      assert.equal(Math.round(flight.velocity().vx), 500, '应改写为 500 而不是 300+500');
+    } finally {
+      frames.restore();
+    }
+  });
+
+  test('impulse 是叠加；没在跑时先起常驻模式', () => {
+    const frames = withFakeFrames();
+    try {
+      const { flight } = harness();
+      assert.equal(flight.isHeld(), false);
+      flight.impulse(400, 0);
+      assert.equal(flight.isHeld(), true, '摇一摇应起常驻模式');
+      frames.tick(16);
+      assert.ok(flight.velocity().vx > 300, `冲量应加进速度：${flight.velocity().vx}`);
+      flight.impulse(200, 0);
+      assert.ok(flight.velocity().vx > 500, '在跑时应继续叠加');
+    } finally {
+      frames.restore();
+    }
+  });
+});
+
+describe('createFlight —— 两只互撞不放大速度', () => {
+  test('对撞后双方速率不超过入射速率，连跑多帧也不增长', () => {
+    const frames = withFakeFrames();
+    try {
+      const arena = { slots: {} as Record<string, PetCollisionSlot> };
+      // 零重力：只验水平对撞，别把落地竖直速度算进峰值。
+      const physics: PhysicsParams = { ...DEFAULT_PHYSICS, gravity: 0, petCollision: true };
+      const a = harness({ petId: 'a', arena, physics });
+      const b = harness({ petId: 'b', arena, physics });
+      const register = (petId: string, target: ReturnType<typeof harness>): void => {
+        arena.slots[petId] = {
+          size: metrics.size,
+          bottomPad: metrics.bottomPad,
+          getBox: () => target.box(),
+          getVel: () => target.flight.velocity(),
+          applyVelocity: (vx, vy) => target.flight.setVelocity(vx, vy),
+        };
+      };
+      register('a', a);
+      register('b', b);
+
+      a.flight.start(300, 100, 600, 0);
+      b.flight.start(500, 100, -600, 0);
+      let peak = 0;
+      for (let i = 0; i < 24; i++) {
+        frames.tick(16);
+        for (const flight of [a.flight, b.flight]) {
+          const vel = flight.velocity();
+          peak = Math.max(peak, Math.hypot(vel.vx, vel.vy));
+        }
+      }
+      assert.ok(peak <= 601, `碰撞不应放大速度：峰值 ${peak}`);
     } finally {
       frames.restore();
     }

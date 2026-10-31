@@ -148,6 +148,9 @@ export const zh = {
   physicsHaptic: '碰撞震动 hapticEnabled',
   physicsHapticHint:
     '撞墙、落地、撞顶、互撞各震一下。Chrome / Edge 可用；iOS 与 Via 等 WebView 壳不生效；勿扰模式会挡住振动。',
+  physicsDeviceMotion: '体感控制 deviceMotion',
+  physicsDeviceMotionHint:
+    '倾斜手机 = 重力朝那边，大小就是上面的重力值；摇一摇 = 沿甩动方向把宠物甩出去。需要 HTTPS/localhost，没有传感器时不生效。',
   invalidPhysics: '请检查物理参数：重力 / 地面摩擦 ≥ 0，弹性 0~1，总力度 > 0。',
   fontTitle: '外观与字体',
   fontHint:

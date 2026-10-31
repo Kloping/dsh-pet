@@ -6,6 +6,7 @@
  */
 import { createFlight, type Flight, type FlightMetrics } from '../motion/flight.ts';
 import { createHaptics, type Haptics } from '../haptics.ts';
+import { canReadMotionSensors, shakeImpulse, subscribeShake, subscribeTilt, tiltGravity } from '../device-tilt.ts';
 import { createPositionFollow, type PositionFollow } from '../motion/position-follow.ts';
 import { createSquashDriver, type SquashDriver } from '../motion/squash.ts';
 import { createWalk, type Walk } from '../motion/walk.ts';
@@ -67,8 +68,6 @@ export interface CardMotion {
   startThrow: (px: number, py: number, vx: number, vy: number) => void;
   /** 抛掷指令：角度（度）与力度倍率。 */
   applyThrow: (angleDeg: number, power: number) => void;
-  /** 被别的宠物撞到：从落点以新初速抛出。 */
-  onPetHit: (vx: number, vy: number) => void;
   /** 自主走位。 */
   walk: Walk;
   /** 抛掷飞行。 */
@@ -177,8 +176,58 @@ export function createCardMotion(rt: CardMotionRuntime) {
       onImpact: (impact) => {
         haptics.hit(impact.kind, impact.speed);
       },
+      // 只在常驻（体感）模式被读：没有采样时退回竖直重力，行为与关掉体感一致。
+      gravity: () => {
+        const sample = tiltSampleRef.current;
+        const baseline = tiltBaselineRef.current;
+        const gravity = cfgRef.current.physics?.gravity ?? 0;
+        if (sample === null || baseline === null) return { gx: 0, gy: gravity };
+        return tiltGravity(sample, baseline, gravity);
+      },
     });
     const flight = flightRef.current;
+
+    /** 体感：采样与中性姿态；关闭开关时清空基线，下次再开重新标定。 */
+    const tiltSampleRef = useRef<{ beta: number; gamma: number } | null>(null);
+    const tiltBaselineRef = useRef<{ beta: number; gamma: number } | null>(null);
+
+    // 传感器订阅只建一次：开关与物理参数每次回调现读，避免重订阅。
+    useEffect(() => {
+      if (!canReadMotionSensors()) return;
+      const offTilt = subscribeTilt((sample) => {
+        if (cfgRef.current.physics?.deviceMotion !== true) {
+          tiltBaselineRef.current = null;
+          // 关掉开关时立刻收手：常驻模式若还在跑，会继续按朝下的重力往下掉。
+          // 只停常驻——无条件 stop 会把正在飞的抛掷一起按掉，而传感器采样是持续不断的。
+          if (flight.isHeld()) flight.stop();
+          return;
+        }
+        if (tiltBaselineRef.current === null) tiltBaselineRef.current = sample;
+        tiltSampleRef.current = sample;
+        if (live.current.drag.isActive() || flight.isFlying()) return;
+        // 只有真的倾斜了才起步：平放时每帧都起/停会长跑一个停不下来的空循环。
+        const gravity = cfgRef.current.physics?.gravity ?? 0;
+        const vector = tiltGravity(sample, tiltBaselineRef.current, gravity);
+        if (vector.gx === 0 && vector.gy === 0) return;
+        // 起步前先让走位与跟随松手：两套驱动同时写 left/top 会抖，互撞读的盒子也会被写乱。
+        stopMove();
+        flight.startHeld();
+      });
+      const offShake = subscribeShake((ax, ay, az) => {
+        const physics = cfgRef.current.physics;
+        if (physics?.deviceMotion !== true) return;
+        if (live.current.drag.isActive()) return;
+        // 常驻模式也在 flight 里跑，所以不能按 isFlying 挡——直接加进当前速度即可。
+        const impulse = shakeImpulse(ax, ay, az, physics.throwPower ?? 1);
+        if (impulse !== null) flight.impulse(impulse.vx, impulse.vy);
+      });
+      return () => {
+        offTilt();
+        offShake();
+        flight.stop();
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- 订阅只建一次；开关、物理参数与驱动实例都经 ref 现读
+    }, []);
 
     /** 从给定左上角与初速起飞；先停弹簧跟随与走位，免得两套运动同时改位置。 */
     const startThrow = (px: number, py: number, vx: number, vy: number): void => {
@@ -186,9 +235,19 @@ export function createCardMotion(rt: CardMotionRuntime) {
       stopMove();
       flight.start(px, py, vx, vy);
     };
-    /** 最新的 startThrow 引用，供碰撞回调转发，避免陈旧闭包。 */
-    const startThrowLatestRef = useRef<(px: number, py: number, vx: number, vy: number) => void>(() => {});
-    startThrowLatestRef.current = startThrow;
+    /** 被撞结算：在跑就原地改写速度（碰撞给的是绝对速度），没跑就当作被撞飞、从落点起飞。 */
+    const applyHit = (vx: number, vy: number): void => {
+      if (flight.isFlying()) {
+        flight.setVelocity(vx, vy);
+        return;
+      }
+      const at = boxRef.current ?? root()?.getBoundingClientRect() ?? null;
+      if (at === null) return;
+      startThrow(at.x, at.y, vx, vy);
+    };
+    /** 最新的 applyHit 引用，供碰撞槽转发，避免陈旧闭包。 */
+    const applyHitRef = useRef<(vx: number, vy: number) => void>(() => {});
+    applyHitRef.current = applyHit;
 
     const posFollowRef = useRef<PositionFollow | null>(null);
     posFollowRef.current ??= createPositionFollow({
@@ -223,28 +282,8 @@ export function createCardMotion(rt: CardMotionRuntime) {
       };
       startThrow(box.x, box.y, vx, vy);
     };
-    /** 被撞回调：停当前动作，从落点以新初速抛出去。 */
-    const onPetHit = (vx: number, vy: number): void => {
-      stopMove();
-      live.current.drag.stopFollow();
-      flight.stop();
-      const bx = boxRef.current;
-      let sx = 0;
-      let sy = 0;
-      if (bx) {
-        sx = bx.x;
-        sy = bx.y;
-      } else {
-        const r = root()?.getBoundingClientRect();
-        if (r) {
-          sx = r.left;
-          sy = r.top;
-        }
-      }
-      startThrowLatestRef.current(sx, sy, vx, vy);
-    };
 
-    // 碰撞站场注册：getVel 取最新抛掷状态，onHit 经 ref 转发，避免陈旧闭包。
+    // 碰撞站场注册：getVel 取最新速度，applyVelocity 经 ref 转发，避免陈旧闭包。
     const { size, bottomPad } = metrics;
     useEffect(() => {
       const arenaSlots = arena.current.slots;
@@ -257,12 +296,12 @@ export function createCardMotion(rt: CardMotionRuntime) {
           return r ? { x: r.left, y: r.top } : null;
         },
         getVel: () => flight.velocity(),
-        onHit: onPetHit,
+        applyVelocity: (vx, vy) => applyHitRef.current(vx, vy),
       };
       return () => {
         delete arenaSlots[petId];
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖由碰撞注册身份 petId/size/bottomPad/arena 决定：onPetHit 只经 startThrowLatestRef 转发、不捕获渲染期状态；补 onPetHit（每渲染重建）会让碰撞槽每渲染注销重注册
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖由碰撞注册身份 petId/size/bottomPad/arena 决定：applyHit 只经 applyHitRef 转发、不捕获渲染期状态；补上它会让碰撞槽每渲染注销重注册
     }, [petId, size, bottomPad, arena]);
 
     const center = (): { x: number; y: number } => ({ x: currentCenterX(), y: currentCenterY() });
@@ -280,7 +319,6 @@ export function createCardMotion(rt: CardMotionRuntime) {
       center,
       flight,
       metrics: () => motionRef.current,
-      onPetHit,
       posFollow,
       setBox: (box) => {
         boxRef.current = box;
