@@ -191,7 +191,7 @@ export const de: Record<Key, string> = {
   'font.simsun': 'SimSun',
   'font.comic': 'Comic Sans MS',
   'font.system': 'Systemstandard',
-  modelTitle: 'KI-Modelle & Chat-Kontext',
+  modelTitle: 'Chat & Modelle',
   modelHint:
     'Welches Modell Flüstern und Chat jeweils nutzen und wie viel Verlauf jeder Chat-Aufruf mitführt. „Aktueller Konversation folgen" = das Modell, das Ihre aktuelle Konversation verwendet (Standard). Globaler Standard: gilt für alle Pets, ein Pet-Pack kann ihn in seiner Art-Datei überschreiben. Die Optionen stammen aus derselben Quelle wie die Modellauswahl von DSH und werden vom Host live geliefert.',
   modelFollow: 'Aktueller Konversation folgen',

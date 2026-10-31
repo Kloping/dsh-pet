@@ -193,7 +193,7 @@ export const pt: Record<Key, string> = {
   'font.simsun': 'SimSun',
   'font.comic': 'Comic Sans MS',
   'font.system': 'Padrão do sistema',
-  modelTitle: 'Modelos de IA e contexto da conversa',
+  modelTitle: 'Conversa e modelos',
   modelHint:
     'Qual modelo o sussurro e a conversa usam, e quanta história cada pedido de conversa carrega. "Seguir a conversa atual" usa o modelo da conversa em que você está (padrão). Padrão global: vale para todos os pets, e um pet pack pode sobrescrever no arquivo do próprio tipo. As opções vêm da mesma fonte do seletor de modelos do DSH, servidas pelo host em tempo real.',
   modelFollow: 'Seguir a conversa atual',

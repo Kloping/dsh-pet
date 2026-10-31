@@ -197,7 +197,7 @@ export const es: Record<Key, string> = {
   'font.simsun': 'SimSun',
   'font.comic': 'Comic Sans MS',
   'font.system': 'Predeterminada del sistema',
-  modelTitle: 'Modelos de IA y contexto del chat',
+  modelTitle: 'Chat y modelos',
   modelHint:
     'Qué modelo usa cada uno de susurros y chat, y cuánto historial lleva cada solicitud de chat. "Seguir la conversación actual" usa el modelo de tu conversación actual (predeterminado). Valor predeterminado global: se aplica a todas las mascotas y un pet pack puede sobrescribirlo en el archivo de su propio tipo. Las opciones vienen de la misma fuente que el selector de modelos de DSH y el host las sirve en vivo.',
   modelFollow: 'Seguir la conversación actual',

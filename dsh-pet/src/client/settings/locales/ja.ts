@@ -187,7 +187,7 @@ export const ja: Record<Key, string> = {
   'font.simsun': 'SimSun',
   'font.comic': 'Comic Sans MS',
   'font.system': 'システムデフォルト',
-  modelTitle: 'AI モデルと会話コンテキスト',
+  modelTitle: '会話とモデル',
   modelHint:
     'ひとりごととチャットがそれぞれどのモデルを使うか、またチャットが毎回何ラウンドの履歴をコンテキストに含めるか。「現在の会話に従う」= 現在の会話で使っているモデルを使用（デフォルト）。グローバルデフォルト：すべてのペットに適用され、pet pack は自身の種類ファイルで個別に上書きできます。選択肢は DSH のモデルピッカーと同じソースからホストがリアルタイムに提供します。',
   modelFollow: '現在の会話に従う',

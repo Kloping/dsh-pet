@@ -195,7 +195,7 @@ export const fr: Record<Key, string> = {
   'font.simsun': 'SimSun',
   'font.comic': 'Comic Sans MS',
   'font.system': 'Police système',
-  modelTitle: "Modèles d'IA et contexte de discussion",
+  modelTitle: 'Discussion et modèles',
   modelHint:
     "Quel modèle utilisent les murmures et la discussion, et combien d'historique chaque requête transporte. « Suivre la conversation actuelle » utilise le modèle de votre conversation en cours (par défaut). Valeur globale par défaut : s'applique à tous les compagnons, et un pet pack peut la remplacer dans son propre fichier de type. Les options viennent de la même source que le sélecteur de modèles de DSH, fournies en direct par l'hôte.",
   modelFollow: 'Suivre la conversation actuelle',

@@ -176,7 +176,7 @@ export const zh = {
   'font.simsun': '宋体',
   'font.comic': '漫画体',
   'font.system': '系统默认',
-  modelTitle: 'AI 模型与对话上下文',
+  modelTitle: '对话与模型',
   modelHint:
     '碎碎念与对话各自用哪个模型，以及对话每次带多少历史进上下文。选「跟随当前对话」= 用你当前对话正在用的那个模型（默认）。全局默认：对所有宠物生效，pet pack 可在自己种类文件里单独覆盖。选项与 DSH 的模型选择器同源，由宿主实时提供。',
   modelFollow: '跟随当前对话',
