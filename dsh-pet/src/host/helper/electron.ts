@@ -22,6 +22,21 @@ export const packageRoot = PACKAGE_ROOT;
 /** 默认的 Helper 入口（runtime/electron-helper/main.js）。 */
 export const defaultHelperMain = resolve(packageRoot, 'runtime', 'electron-helper', 'main.js');
 
+/** 桌面 Helper 的远程调试端口：0 = 不开。排障时本地改成 9222，重启 Helper 后用 chrome://inspect 连。 */
+export const DESKTOP_DEBUG_PORT = 0;
+
+/**
+ * 桌面 Helper 的启动参数。
+ *
+ * @param helperPath - Helper 入口脚本的绝对路径。
+ * @param debugPort - 远程调试端口；0 表示不挂 Chromium 的调试开关。
+ * @returns 可直接交给 spawn 的参数数组。
+ */
+export function helperLaunchArgs(helperPath: string, debugPort = DESKTOP_DEBUG_PORT): string[] {
+  // 开关排在脚本路径之前：与 Electron 文档的启动写法一致，不会被当成业务参数。
+  return debugPort > 0 ? ['--remote-debugging-port=' + debugPort, helperPath] : [helperPath];
+}
+
 /** 只做基本文件校验：不验证二进制格式，也不实际启动候选。 */
 function isNonEmptyFile(path: string): boolean {
   try {
@@ -257,5 +272,5 @@ export function defaultLaunch(options: HelperOptions = {}): { command: string; a
     throw new Error('dsh-pet: cannot resolve Electron executable. Set DSH_PET_ELECTRON_PATH or install electron.');
   }
   const helperPath = options.helperPath || defaultHelperMain;
-  return { command: electronPath, args: [helperPath] };
+  return { command: electronPath, args: helperLaunchArgs(helperPath) };
 }
